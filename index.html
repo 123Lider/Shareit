@@ -19,10 +19,10 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* Buttons */
-        .btn { padding: 15px 30px; margin: 10px; font-size: 18px; border: none; border-radius: 30px; cursor: pointer; font-weight: bold; width: 80%; transition: 0.3s; }
+        .btn { padding: 15px 30px; margin: 10px 0; font-size: 18px; border: none; border-radius: 30px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
         .btn-send { background-color: #008CBA; color: white; }
         .btn-receive { background-color: #4CAF50; color: white; }
-        .btn-back { background-color: #f44336; color: white; padding: 10px 20px; font-size: 14px; margin-bottom: 20px;}
+        .btn-back { background-color: #f44336; color: white; padding: 10px 20px; font-size: 14px; margin-bottom: 20px; width: auto;}
         .btn:active { transform: scale(0.95); }
 
         /* Radar Animation */
@@ -38,40 +38,52 @@
 
         /* Inputs & Lists */
         input[type="text"], input[type="file"] { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; outline: none; }
-        .file-list, .receive-list { text-align: left; margin-top: 20px; background: #1e1e1e; padding: 10px; border-radius: 10px; min-height: 100px; }
-        .file-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #333; }
-        .file-item:last-child { border-bottom: none; }
-        .download-btn { background: #4CAF50; color: white; text-decoration: none; padding: 5px 10px; border-radius: 5px; font-size: 14px; }
+        .file-list, .receive-list { text-align: left; margin-top: 15px; background: #1e1e1e; padding: 10px; border-radius: 10px; min-height: 100px; }
         
-        #status { color: #ffeb3b; margin-top: 10px; font-size: 14px; }
+        /* Scrollable Box for files */
+        .scroll-box { max-height: 250px; overflow-y: auto; }
+        
+        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px solid #333; font-size: 14px;}
+        .file-item:last-child { border-bottom: none; }
+        
+        .download-btn { background: #4CAF50; color: white; text-decoration: none; padding: 8px 12px; border-radius: 5px; font-size: 12px; font-weight: bold; transition: 0.3s; cursor: pointer; border: none;}
+        .download-btn.downloaded { background: #555; color: #ccc; } /* Downloaded state color */
+        
+        #status { color: #ffeb3b; margin-top: 10px; font-size: 14px; font-weight: bold; }
+        .serial-no { color: #00bcd4; font-weight: bold; margin-right: 5px; }
     </style>
 </head>
 <body>
 
     <!-- HOME SCREEN -->
     <div id="homeScreen" class="container screen active-screen">
-        <h1 style="margin-bottom: 40px; color: #00bcd4;">Web ShareIt</h1>
-        <button class="btn btn-send" onclick="showScreen('sendScreen')"> Send</button>
-        <button class="btn btn-receive" onclick="showScreen('receiveScreen'); startReceiving();"> Receive</button>
+        <h1 style="margin-bottom: 40px; color: #00bcd4; margin-top: 50px;">Web ShareIt</h1>
+        <button class="btn btn-send" onclick="showScreen('sendScreen')">📤 Send</button>
+        <button class="btn btn-receive" onclick="showScreen('receiveScreen'); startReceiving();">📥 Receive</button>
     </div>
 
     <!-- SEND SCREEN -->
     <div id="sendScreen" class="container screen">
-        <button class="btn btn-back" onclick="showScreen('homeScreen')"> Back</button>
-        <h2>Send Files</h2>
+        <button class="btn btn-back" onclick="showScreen('homeScreen')">⬅ Back</button>
+        <h2 style="margin-bottom: 10px;">Send Files</h2>
         
-        <input type="file" id="filePicker" multiple>
-        <div class="file-list" id="selectedFilesBox">No files selected</div>
-        
+        <!-- Input & Send Button on TOP -->
         <input type="text" id="receiverUID" placeholder="Enter Receiver's UID (e.g. 123456)">
-        <button class="btn btn-send" onclick="sendFiles()"> Send Now</button>
-        
+        <button class="btn btn-send" onclick="sendFiles()" style="margin-bottom: 10px;">🚀 Send Now</button>
         <div id="status"></div>
+        
+        <!-- File Picker -->
+        <input type="file" id="filePicker" multiple style="background: #333; color: white;">
+        
+        <!-- Selected Files List (Scrollable) -->
+        <div class="file-list scroll-box" id="selectedFilesBox">
+            <span style="color:#888;">No files selected</span>
+        </div>
     </div>
 
     <!-- RECEIVE SCREEN -->
     <div id="receiveScreen" class="container screen">
-        <button class="btn btn-back" onclick="showScreen('homeScreen')"> Back</button>
+        <button class="btn btn-back" onclick="showScreen('homeScreen')">⬅ Back</button>
         <h2>Waiting for files...</h2>
         
         <div class="radar-box">
@@ -80,20 +92,23 @@
             <div class="radar-circle"></div>
             <div class="uid-display" id="myUIDDisplay">------</div>
         </div>
-        <p>Give this UID to the sender</p>
+        <p style="margin-bottom: 10px;">Give this UID to the sender</p>
 
-        <div class="receive-list" id="receivedFilesBox">
+        <!-- Received Files List (Scrollable) -->
+        <div class="receive-list scroll-box">
             <h4 style="margin-bottom: 10px; color: #aaa;">Incoming Files:</h4>
-            <!-- Received files will appear here -->
+            <div id="receivedFilesBox">
+                <!-- Received files will appear here -->
+            </div>
         </div>
     </div>
 
 <script>
     // ==========================================
-    // 1. CONFIGURATION (  API Key )
+    // 1. CONFIGURATION (আপনার আসল API Key বসান)
     // ==========================================
     
-    // Firebase Config (Firebase Console  )
+    // Firebase Config (Firebase Console থেকে পাবেন)
     const firebaseConfig = {
   apiKey: "AIzaSyDrWyO51TZ8xhV5vgCYKxK-nONAkgsW3u8",
   authDomain: "shareit-c6bdf.firebaseapp.com",
@@ -127,11 +142,9 @@
         let uid = localStorage.getItem('shareUID');
         let timestamp = localStorage.getItem('shareUID_time');
 
-        // Check if UID exists and is less than 5 hours old
         if (uid && timestamp && (now - timestamp < fiveHours)) {
             return uid;
         } else {
-            // Generate new 6-digit UID
             uid = Math.floor(100000 + Math.random() * 900000).toString();
             localStorage.setItem('shareUID', uid);
             localStorage.setItem('shareUID_time', now.toString());
@@ -140,20 +153,28 @@
     }
 
     // ==========================================
-    // 4. SEND LOGIC (Cloudinary + Firebase)
+    // 4. SEND LOGIC
     // ==========================================
     const filePicker = document.getElementById('filePicker');
     const selectedFilesBox = document.getElementById('selectedFilesBox');
     let filesToUpload = [];
 
-    // Show selected files in Send Box
+    // Show selected files with Serial Numbers
     filePicker.addEventListener('change', (e) => {
         filesToUpload = Array.from(e.target.files);
         if(filesToUpload.length === 0) {
-            selectedFilesBox.innerHTML = "No files selected";
+            selectedFilesBox.innerHTML = "<span style='color:#888;'>No files selected</span>";
             return;
         }
-        selectedFilesBox.innerHTML = filesToUpload.map(f => `<div class="file-item">${f.name}</div>`).join('');
+        let html = "";
+        filesToUpload.forEach((f, index) => {
+            html += `<div class="file-item">
+                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%;">
+                            <span class="serial-no">${index + 1}.</span> ${f.name}
+                        </span>
+                     </div>`;
+        });
+        selectedFilesBox.innerHTML = html;
     });
 
     async function sendFiles() {
@@ -163,14 +184,13 @@
         if(filesToUpload.length === 0) return alert("Please select files first!");
         if(!receiverUID) return alert("Please enter receiver UID!");
 
-        statusEl.innerText = "Uploading files...";
+        statusEl.innerText = "Starting upload...";
 
         for (let i = 0; i < filesToUpload.length; i++) {
             const file = filesToUpload[i];
             try {
-                statusEl.innerText = `Uploading ${i+1}/${filesToUpload.length}: ${file.name}...`;
+                statusEl.innerText = `Uploading ${i+1} of ${filesToUpload.length}: ${file.name}...`;
                 
-                // Upload to Cloudinary
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
@@ -179,7 +199,6 @@
                 const data = await res.json();
                 
                 if(data.secure_url) {
-                    // Save to Firebase under Receiver's UID
                     database.ref('shares/' + receiverUID).push({
                         fileName: file.name,
                         fileUrl: data.secure_url,
@@ -191,14 +210,16 @@
                 alert("Failed to upload: " + file.name);
             }
         }
-        statusEl.innerText = "All files sent successfully!";
-        setTimeout(() => statusEl.innerText = "", 3000);
+        statusEl.style.color = "#4CAF50";
+        statusEl.innerText = "✅ All files sent successfully!";
+        setTimeout(() => { statusEl.innerText = ""; statusEl.style.color = "#ffeb3b"; }, 4000);
     }
 
     // ==========================================
-    // 5. RECEIVE LOGIC (Firebase Listener)
+    // 5. RECEIVE & DOWNLOAD LOGIC
     // ==========================================
     let isListening = false;
+    let receiveCounter = 0;
     
     function startReceiving() {
         const myUID = getMyUID();
@@ -207,28 +228,33 @@
         if(!isListening) {
             isListening = true;
             const receivedFilesBox = document.getElementById('receivedFilesBox');
+            receivedFilesBox.innerHTML = ''; // Clear old files
+            receiveCounter = 0; // Reset counter
             
-            // Listen to Firebase for incoming files
             database.ref('shares/' + myUID).on('child_added', (snapshot) => {
                 const data = snapshot.val();
+                receiveCounter++;
                 
-                // Add fl_attachment to Cloudinary URL to force download
+                // fl_attachment forces direct download instead of opening in browser
                 const downloadUrl = data.fileUrl.replace('/upload/', '/upload/fl_attachment/');
 
                 const fileHTML = `
                     <div class="file-item">
-                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">
-                            ${data.fileName}
+                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%;" title="${data.fileName}">
+                            <span class="serial-no">${receiveCounter}.</span> ${data.fileName}
                         </span>
-                        <a href="${downloadUrl}" class="download-btn" target="_blank" download>Download</a>
+                        <a href="${downloadUrl}" class="download-btn" onclick="markDownloaded(this)" download="${data.fileName}">Download</a>
                     </div>
                 `;
                 receivedFilesBox.innerHTML += fileHTML;
-                
-                // Optional: Remove from database after receiving to clear space
-                // snapshot.ref.remove(); 
             });
         }
+    }
+
+    // Change button text and color after clicking download
+    function markDownloaded(btn) {
+        btn.innerText = "Downloaded ✔";
+        btn.classList.add("downloaded");
     }
 </script>
 
