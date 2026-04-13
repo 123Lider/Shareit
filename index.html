@@ -3,88 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web ShareIt</title>
+    <title>Web ShareIt Pro</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #121212; color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        /* Modern Premium UI Styles */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', 'Segoe UI', sans-serif; }
+        body { 
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
         
-        .container { width: 100%; max-width: 400px; padding: 20px; text-align: center; }
-        .screen { display: none; width: 100%; animation: fadeIn 0.3s; }
+        .container { 
+            width: 100%; max-width: 450px; padding: 25px; text-align: center; 
+            background: rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(15px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-top: 20px;
+        }
+
+        .screen { display: none; width: 100%; animation: slideIn 0.4s ease-out; }
         .active-screen { display: block; }
         
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         /* Buttons */
-        .btn { padding: 15px 30px; margin: 10px 0; font-size: 18px; border: none; border-radius: 30px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
-        .btn-send { background-color: #008CBA; color: white; }
-        .btn-receive { background-color: #4CAF50; color: white; }
-        .btn-back { background-color: #f44336; color: white; padding: 10px 20px; font-size: 14px; margin-bottom: 20px; width: auto;}
+        .btn { 
+            padding: 15px 30px; margin: 12px 0; font-size: 16px; border: none; border-radius: 12px; 
+            cursor: pointer; font-weight: bold; width: 100%; transition: all 0.3s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-send { background: linear-gradient(45deg, #00B4DB, #0083B0); color: white; box-shadow: 0 4px 15px rgba(0, 180, 219, 0.4); }
+        .btn-receive { background: linear-gradient(45deg, #11998e, #38ef7d); color: white; box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4); }
+        .btn-back { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 15px; font-size: 12px; margin-bottom: 20px; width: auto; border-radius: 8px;}
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
         .btn:active { transform: scale(0.95); }
 
         /* Radar Animation */
-        .radar-box { position: relative; width: 200px; height: 200px; margin: 30px auto; display: flex; justify-content: center; align-items: center; }
-        .radar-circle { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #4CAF50; animation: pulse 2s infinite; }
+        .radar-box { position: relative; width: 180px; height: 180px; margin: 30px auto; display: flex; justify-content: center; align-items: center; }
+        .radar-circle { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #38ef7d; animation: pulse 2s infinite; }
         .radar-circle:nth-child(2) { animation-delay: 0.5s; }
         .radar-circle:nth-child(3) { animation-delay: 1s; }
-        @keyframes pulse {
-            0% { transform: scale(0.5); opacity: 1; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
-        .uid-display { font-size: 32px; font-weight: bold; color: #4CAF50; z-index: 10; background: #121212; padding: 10px; border-radius: 10px; }
+        @keyframes pulse { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+        .uid-display { font-size: 35px; font-weight: bold; color: #38ef7d; z-index: 10; text-shadow: 0 0 10px rgba(56, 239, 125, 0.5); }
 
-        /* Inputs & Lists */
-        input[type="text"], input[type="file"] { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; outline: none; }
-        .file-list, .receive-list { text-align: left; margin-top: 15px; background: #1e1e1e; padding: 10px; border-radius: 10px; min-height: 100px; }
+        /* Inputs */
+        input[type="text"] { 
+            width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); 
+            background: rgba(0,0,0,0.2); color: white; outline: none; font-size: 16px; text-align: center;
+        }
+        input[type="text"]::placeholder { color: #aaa; }
         
-        /* Scrollable Box for files */
-        .scroll-box { max-height: 250px; overflow-y: auto; }
+        .file-upload-wrapper { position: relative; margin: 10px 0 20px 0; }
+        .custom-file-upload { 
+            display: inline-block; padding: 15px; width: 100%; border-radius: 12px; border: 2px dashed rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.05); color: white; cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        .custom-file-upload:hover { border-color: #00B4DB; background: rgba(0, 180, 219, 0.1); }
+        input[type="file"] { display: none; }
+
+        /* Scrollable File List */
+        .scroll-box { max-height: 350px; overflow-y: auto; padding-right: 5px; margin-top: 15px;}
+        .scroll-box::-webkit-scrollbar { width: 6px; }
+        .scroll-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        /* File Card (Bigger Body & Previews) */
+        .file-card { 
+            background: rgba(0,0,0,0.3); border-radius: 15px; padding: 12px; margin-bottom: 15px;
+            display: flex; flex-direction: column; align-items: center; position: relative;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
         
-        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px solid #333; font-size: 14px;}
-        .file-item:last-child { border-bottom: none; }
+        /* Badges */
+        .badge { 
+            position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 20px;
+            font-size: 10px; font-weight: bold; text-transform: uppercase; z-index: 2;
+        }
+        .badge-image { background: #E91E63; color: white; }
+        .badge-video { background: #FF9800; color: white; }
+        .badge-other { background: #9E9E9E; color: white; }
+
+        /* Media Preview */
+        .preview-media { 
+            width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin-bottom: 10px;
+            background: #111;
+        }
+
+        .file-info { display: flex; justify-content: space-between; width: 100%; align-items: center; }
+        .file-name { font-size: 13px; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; text-align: left;}
         
-        .download-btn { background: #4CAF50; color: white; text-decoration: none; padding: 8px 12px; border-radius: 5px; font-size: 12px; font-weight: bold; transition: 0.3s; cursor: pointer; border: none;}
-        .download-btn.downloaded { background: #555; color: #ccc; } /* Downloaded state color */
-        
-        #status { color: #ffeb3b; margin-top: 10px; font-size: 14px; font-weight: bold; }
-        .serial-no { color: #00bcd4; font-weight: bold; margin-right: 5px; }
+        .download-btn { 
+            background: #38ef7d; color: #000; text-decoration: none; padding: 8px 15px; 
+            border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; border: none;
+            box-shadow: 0 4px 10px rgba(56, 239, 125, 0.3);
+        }
+        .download-btn.downloaded { background: #555; color: #aaa; box-shadow: none;}
+
+        #status { color: #FFD700; margin-top: 10px; font-size: 14px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <!-- HOME SCREEN -->
     <div id="homeScreen" class="container screen active-screen">
-        <h1 style="margin-bottom: 40px; color: #00bcd4; margin-top: 50px;">Web ShareIt</h1>
-        <button class="btn btn-send" onclick="showScreen('sendScreen')">ðŸ“¤ Send</button>
-        <button class="btn btn-receive" onclick="showScreen('receiveScreen'); startReceiving();">ðŸ“¥ Receive</button>
+        <div style="font-size: 50px; margin-bottom: 10px;">⚡</div>
+        <h1 style="margin-bottom: 40px; color: #fff; font-weight: 800; letter-spacing: 2px;">SHARE<span style="color: #00B4DB;">PRO</span></h1>
+        <button class="btn btn-send" onclick="showScreen('sendScreen')">📤 Send Files</button>
+        <button class="btn btn-receive" onclick="showScreen('receiveScreen'); startReceiving();">📥 Receive Files</button>
     </div>
 
     <!-- SEND SCREEN -->
     <div id="sendScreen" class="container screen">
-        <button class="btn btn-back" onclick="showScreen('homeScreen')">â¬… Back</button>
-        <h2 style="margin-bottom: 10px;">Send Files</h2>
+        <button class="btn btn-back" onclick="showScreen('homeScreen')">⬅ Back</button>
         
-        <!-- Input & Send Button on TOP -->
-        <input type="text" id="receiverUID" placeholder="Enter Receiver's UID (e.g. 123456)">
-        <button class="btn btn-send" onclick="sendFiles()" style="margin-bottom: 10px;">ðŸš€ Send Now</button>
+        <input type="text" id="receiverUID" placeholder="Enter 6-Digit Receiver UID">
+        <button class="btn btn-send" onclick="sendFiles()">🚀 Start Transfer</button>
         <div id="status"></div>
         
-        <!-- File Picker -->
-        <input type="file" id="filePicker" multiple style="background: #333; color: white;">
+        <div class="file-upload-wrapper">
+            <label class="custom-file-upload">
+                <input type="file" id="filePicker" multiple>
+                ➕ Select Images & Videos
+            </label>
+        </div>
         
-        <!-- Selected Files List (Scrollable) -->
-        <div class="file-list scroll-box" id="selectedFilesBox">
-            <span style="color:#888;">No files selected</span>
+        <!-- Selected Files Preview -->
+        <div class="scroll-box" id="selectedFilesBox">
+            <p style="color:#888; font-size: 14px;">No files selected yet</p>
         </div>
     </div>
 
     <!-- RECEIVE SCREEN -->
     <div id="receiveScreen" class="container screen">
-        <button class="btn btn-back" onclick="showScreen('homeScreen')">â¬… Back</button>
-        <h2>Waiting for files...</h2>
+        <button class="btn btn-back" onclick="showScreen('homeScreen')">⬅ Back</button>
+        <h3 style="color: #ddd; margin-bottom: 20px;">Radar Active</h3>
         
         <div class="radar-box">
             <div class="radar-circle"></div>
@@ -92,23 +153,18 @@
             <div class="radar-circle"></div>
             <div class="uid-display" id="myUIDDisplay">------</div>
         </div>
-        <p style="margin-bottom: 10px;">Give this UID to the sender</p>
+        <p style="color: #aaa; font-size: 14px;">Share this UID with sender</p>
 
-        <!-- Received Files List (Scrollable) -->
-        <div class="receive-list scroll-box">
-            <h4 style="margin-bottom: 10px; color: #aaa;">Incoming Files:</h4>
-            <div id="receivedFilesBox">
-                <!-- Received files will appear here -->
-            </div>
+        <!-- Received Files List -->
+        <div class="scroll-box" id="receivedFilesBox">
+            <!-- Incoming files will appear here -->
         </div>
     </div>
 
 <script>
     // ==========================================
-    // 1. CONFIGURATION (à¦†à¦ªà¦¨à¦¾à¦° à¦†à¦¸à¦² API Key à¦¬à¦¸à¦¾à¦¨)
+    // 1. CONFIGURATION (আপনার API Key বসান)
     // ==========================================
-    
-    // Firebase Config (Firebase Console à¦¥à§‡à¦•à§‡ à¦ªà¦¾à¦¬à§‡à¦¨)
     const firebaseConfig = {
   apiKey: "AIzaSyDrWyO51TZ8xhV5vgCYKxK-nONAkgsW3u8",
   authDomain: "shareit-c6bdf.firebaseapp.com",
@@ -125,16 +181,13 @@
     const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dhfbdy7rq/auto/upload";
     const CLOUDINARY_UPLOAD_PRESET = "MiniDrive";
 
-    // ==========================================
-    // 2. UI NAVIGATION
-    // ==========================================
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(el => el.classList.remove('active-screen'));
         document.getElementById(screenId).classList.add('active-screen');
     }
 
     // ==========================================
-    // 3. UID GENERATION (5 Hours Logic)
+    // 2. UID GENERATION & AUTO DELETE (5 Hours)
     // ==========================================
     function getMyUID() {
         const now = Date.now();
@@ -145,6 +198,12 @@
         if (uid && timestamp && (now - timestamp < fiveHours)) {
             return uid;
         } else {
+            // Delete old files from Database before creating new UID
+            if(uid) {
+                database.ref('shares/' + uid).remove();
+            }
+            
+            // Generate New UID
             uid = Math.floor(100000 + Math.random() * 900000).toString();
             localStorage.setItem('shareUID', uid);
             localStorage.setItem('shareUID_time', now.toString());
@@ -153,26 +212,43 @@
     }
 
     // ==========================================
-    // 4. SEND LOGIC
+    // 3. SEND LOGIC & PREVIEWS
     // ==========================================
     const filePicker = document.getElementById('filePicker');
     const selectedFilesBox = document.getElementById('selectedFilesBox');
     let filesToUpload = [];
 
-    // Show selected files with Serial Numbers
     filePicker.addEventListener('change', (e) => {
         filesToUpload = Array.from(e.target.files);
-        if(filesToUpload.length === 0) {
-            selectedFilesBox.innerHTML = "<span style='color:#888;'>No files selected</span>";
-            return;
-        }
+        if(filesToUpload.length === 0) return;
+        
         let html = "";
-        filesToUpload.forEach((f, index) => {
-            html += `<div class="file-item">
-                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%;">
-                            <span class="serial-no">${index + 1}.</span> ${f.name}
-                        </span>
-                     </div>`;
+        filesToUpload.forEach((file, index) => {
+            let isVideo = file.type.startsWith('video');
+            let isImage = file.type.startsWith('image');
+            
+            let badgeClass = isVideo ? 'badge-video' : (isImage ? 'badge-image' : 'badge-other');
+            let badgeText = isVideo ? 'VIDEO 🎬' : (isImage ? 'IMAGE 🖼️' : 'FILE 📄');
+            
+            // Local preview using ObjectURL
+            let mediaTag = "";
+            if (isVideo) {
+                mediaTag = `<video class="preview-media" src="${URL.createObjectURL(file)}#t=0.1" controls></video>`;
+            } else if (isImage) {
+                mediaTag = `<img class="preview-media" src="${URL.createObjectURL(file)}">`;
+            } else {
+                mediaTag = `<div class="preview-media" style="display:flex; align-items:center; justify-content:center;">📄 No Preview</div>`;
+            }
+
+            html += `
+                <div class="file-card">
+                    <span class="badge ${badgeClass}">${badgeText}</span>
+                    ${mediaTag}
+                    <div class="file-info">
+                        <span class="file-name"><b>${index + 1}.</b> ${file.name}</span>
+                        <span style="font-size:11px; color:#aaa;">Pending</span>
+                    </div>
+                </div>`;
         });
         selectedFilesBox.innerHTML = html;
     });
@@ -184,12 +260,12 @@
         if(filesToUpload.length === 0) return alert("Please select files first!");
         if(!receiverUID) return alert("Please enter receiver UID!");
 
-        statusEl.innerText = "Starting upload...";
+        statusEl.innerText = "🚀 Preparing Transfer...";
 
         for (let i = 0; i < filesToUpload.length; i++) {
             const file = filesToUpload[i];
             try {
-                statusEl.innerText = `Uploading ${i+1} of ${filesToUpload.length}: ${file.name}...`;
+                statusEl.innerText = `Uploading ${i+1} of ${filesToUpload.length}...`;
                 
                 const formData = new FormData();
                 formData.append('file', file);
@@ -202,21 +278,21 @@
                     database.ref('shares/' + receiverUID).push({
                         fileName: file.name,
                         fileUrl: data.secure_url,
+                        fileType: file.type,
                         timestamp: Date.now()
                     });
                 }
             } catch (error) {
-                console.error("Upload error: ", error);
                 alert("Failed to upload: " + file.name);
             }
         }
-        statusEl.style.color = "#4CAF50";
-        statusEl.innerText = "âœ… All files sent successfully!";
-        setTimeout(() => { statusEl.innerText = ""; statusEl.style.color = "#ffeb3b"; }, 4000);
+        statusEl.style.color = "#38ef7d";
+        statusEl.innerText = "✅ Transfer Complete!";
+        setTimeout(() => { statusEl.innerText = ""; statusEl.style.color = "#FFD700"; }, 4000);
     }
 
     // ==========================================
-    // 5. RECEIVE & DOWNLOAD LOGIC
+    // 4. RECEIVE & PREVIEW LOGIC
     // ==========================================
     let isListening = false;
     let receiveCounter = 0;
@@ -228,22 +304,38 @@
         if(!isListening) {
             isListening = true;
             const receivedFilesBox = document.getElementById('receivedFilesBox');
-            receivedFilesBox.innerHTML = ''; // Clear old files
-            receiveCounter = 0; // Reset counter
+            receivedFilesBox.innerHTML = ''; 
+            receiveCounter = 0; 
             
             database.ref('shares/' + myUID).on('child_added', (snapshot) => {
                 const data = snapshot.val();
                 receiveCounter++;
                 
-                // fl_attachment forces direct download instead of opening in browser
+                let isVideo = data.fileType && data.fileType.startsWith('video');
+                let isImage = data.fileType && data.fileType.startsWith('image');
+                
+                let badgeClass = isVideo ? 'badge-video' : (isImage ? 'badge-image' : 'badge-other');
+                let badgeText = isVideo ? 'VIDEO 🎬' : (isImage ? 'IMAGE 🖼️' : 'FILE 📄');
+
+                // Generate Preview Tag
+                let mediaTag = "";
+                if (isVideo) {
+                    mediaTag = `<video class="preview-media" src="${data.fileUrl}#t=0.1" controls preload="metadata"></video>`;
+                } else if (isImage) {
+                    mediaTag = `<img class="preview-media" src="${data.fileUrl}">`;
+                }
+
+                // URL to Force Download Original HD File
                 const downloadUrl = data.fileUrl.replace('/upload/', '/upload/fl_attachment/');
 
                 const fileHTML = `
-                    <div class="file-item">
-                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%;" title="${data.fileName}">
-                            <span class="serial-no">${receiveCounter}.</span> ${data.fileName}
-                        </span>
-                        <a href="${downloadUrl}" class="download-btn" onclick="markDownloaded(this)" download="${data.fileName}">Download</a>
+                    <div class="file-card">
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                        ${mediaTag}
+                        <div class="file-info">
+                            <span class="file-name" title="${data.fileName}"><b>${receiveCounter}.</b> ${data.fileName}</span>
+                            <a href="${downloadUrl}" class="download-btn" onclick="markDownloaded(this)">📥 Save HD</a>
+                        </div>
                     </div>
                 `;
                 receivedFilesBox.innerHTML += fileHTML;
@@ -251,9 +343,8 @@
         }
     }
 
-    // Change button text and color after clicking download
     function markDownloaded(btn) {
-        btn.innerText = "Downloaded âœ”";
+        btn.innerHTML = "✔ Saved";
         btn.classList.add("downloaded");
     }
 </script>
