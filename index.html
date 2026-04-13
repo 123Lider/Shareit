@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web ShareIt</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #121212; color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        .container { width: 100%; max-width: 400px; padding: 20px; text-align: center; }
+        .screen { display: none; width: 100%; animation: fadeIn 0.3s; }
+        .active-screen { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Buttons */
+        .btn { padding: 15px 30px; margin: 10px; font-size: 18px; border: none; border-radius: 30px; cursor: pointer; font-weight: bold; width: 80%; transition: 0.3s; }
+        .btn-send { background-color: #008CBA; color: white; }
+        .btn-receive { background-color: #4CAF50; color: white; }
+        .btn-back { background-color: #f44336; color: white; padding: 10px 20px; font-size: 14px; margin-bottom: 20px;}
+        .btn:active { transform: scale(0.95); }
+
+        /* Radar Animation */
+        .radar-box { position: relative; width: 200px; height: 200px; margin: 30px auto; display: flex; justify-content: center; align-items: center; }
+        .radar-circle { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #4CAF50; animation: pulse 2s infinite; }
+        .radar-circle:nth-child(2) { animation-delay: 0.5s; }
+        .radar-circle:nth-child(3) { animation-delay: 1s; }
+        @keyframes pulse {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        .uid-display { font-size: 32px; font-weight: bold; color: #4CAF50; z-index: 10; background: #121212; padding: 10px; border-radius: 10px; }
+
+        /* Inputs & Lists */
+        input[type="text"], input[type="file"] { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; outline: none; }
+        .file-list, .receive-list { text-align: left; margin-top: 20px; background: #1e1e1e; padding: 10px; border-radius: 10px; min-height: 100px; }
+        .file-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #333; }
+        .file-item:last-child { border-bottom: none; }
+        .download-btn { background: #4CAF50; color: white; text-decoration: none; padding: 5px 10px; border-radius: 5px; font-size: 14px; }
+        
+        #status { color: #ffeb3b; margin-top: 10px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <!-- HOME SCREEN -->
+    <div id="homeScreen" class="container screen active-screen">
+        <h1 style="margin-bottom: 40px; color: #00bcd4;">Web ShareIt</h1>
+        <button class="btn btn-send" onclick="showScreen('sendScreen')"> Send</button>
+        <button class="btn btn-receive" onclick="showScreen('receiveScreen'); startReceiving();"> Receive</button>
+    </div>
+
+    <!-- SEND SCREEN -->
+    <div id="sendScreen" class="container screen">
+        <button class="btn btn-back" onclick="showScreen('homeScreen')"> Back</button>
+        <h2>Send Files</h2>
+        
+        <input type="file" id="filePicker" multiple>
+        <div class="file-list" id="selectedFilesBox">No files selected</div>
+        
+        <input type="text" id="receiverUID" placeholder="Enter Receiver's UID (e.g. 123456)">
+        <button class="btn btn-send" onclick="sendFiles()"> Send Now</button>
+        
+        <div id="status"></div>
+    </div>
+
+    <!-- RECEIVE SCREEN -->
+    <div id="receiveScreen" class="container screen">
+        <button class="btn btn-back" onclick="showScreen('homeScreen')"> Back</button>
+        <h2>Waiting for files...</h2>
+        
+        <div class="radar-box">
+            <div class="radar-circle"></div>
+            <div class="radar-circle"></div>
+            <div class="radar-circle"></div>
+            <div class="uid-display" id="myUIDDisplay">------</div>
+        </div>
+        <p>Give this UID to the sender</p>
+
+        <div class="receive-list" id="receivedFilesBox">
+            <h4 style="margin-bottom: 10px; color: #aaa;">Incoming Files:</h4>
+            <!-- Received files will appear here -->
+        </div>
+    </div>
+
+<script>
+    // ==========================================
+    // 1. CONFIGURATION (  API Key )
+    // ==========================================
+    
+    // Firebase Config (Firebase Console  )
+    const firebaseConfig = {
+  apiKey: "AIzaSyDrWyO51TZ8xhV5vgCYKxK-nONAkgsW3u8",
+  authDomain: "shareit-c6bdf.firebaseapp.com",
+  projectId: "shareit-c6bdf",
+  storageBucket: "shareit-c6bdf.firebasestorage.app",
+  messagingSenderId: "948302866705",
+  appId: "1:948302866705:web:4965a54ec451046f2f84b0",
+  measurementId: "G-9CG7PQGCJM"
+};
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Cloudinary Config
+    const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dhfbdy7rq/auto/upload";
+    const CLOUDINARY_UPLOAD_PRESET = "MiniDrive";
+
+    // ==========================================
+    // 2. UI NAVIGATION
+    // ==========================================
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active-screen'));
+        document.getElementById(screenId).classList.add('active-screen');
+    }
+
+    // ==========================================
+    // 3. UID GENERATION (5 Hours Logic)
+    // ==========================================
+    function getMyUID() {
+        const now = Date.now();
+        const fiveHours = 5 * 60 * 60 * 1000;
+        let uid = localStorage.getItem('shareUID');
+        let timestamp = localStorage.getItem('shareUID_time');
+
+        // Check if UID exists and is less than 5 hours old
+        if (uid && timestamp && (now - timestamp < fiveHours)) {
+            return uid;
+        } else {
+            // Generate new 6-digit UID
+            uid = Math.floor(100000 + Math.random() * 900000).toString();
+            localStorage.setItem('shareUID', uid);
+            localStorage.setItem('shareUID_time', now.toString());
+            return uid;
+        }
+    }
+
+    // ==========================================
+    // 4. SEND LOGIC (Cloudinary + Firebase)
+    // ==========================================
+    const filePicker = document.getElementById('filePicker');
+    const selectedFilesBox = document.getElementById('selectedFilesBox');
+    let filesToUpload = [];
+
+    // Show selected files in Send Box
+    filePicker.addEventListener('change', (e) => {
+        filesToUpload = Array.from(e.target.files);
+        if(filesToUpload.length === 0) {
+            selectedFilesBox.innerHTML = "No files selected";
+            return;
+        }
+        selectedFilesBox.innerHTML = filesToUpload.map(f => `<div class="file-item">${f.name}</div>`).join('');
+    });
+
+    async function sendFiles() {
+        const receiverUID = document.getElementById('receiverUID').value.trim();
+        const statusEl = document.getElementById('status');
+
+        if(filesToUpload.length === 0) return alert("Please select files first!");
+        if(!receiverUID) return alert("Please enter receiver UID!");
+
+        statusEl.innerText = "Uploading files...";
+
+        for (let i = 0; i < filesToUpload.length; i++) {
+            const file = filesToUpload[i];
+            try {
+                statusEl.innerText = `Uploading ${i+1}/${filesToUpload.length}: ${file.name}...`;
+                
+                // Upload to Cloudinary
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+                const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+                const data = await res.json();
+                
+                if(data.secure_url) {
+                    // Save to Firebase under Receiver's UID
+                    database.ref('shares/' + receiverUID).push({
+                        fileName: file.name,
+                        fileUrl: data.secure_url,
+                        timestamp: Date.now()
+                    });
+                }
+            } catch (error) {
+                console.error("Upload error: ", error);
+                alert("Failed to upload: " + file.name);
+            }
+        }
+        statusEl.innerText = "All files sent successfully!";
+        setTimeout(() => statusEl.innerText = "", 3000);
+    }
+
+    // ==========================================
+    // 5. RECEIVE LOGIC (Firebase Listener)
+    // ==========================================
+    let isListening = false;
+    
+    function startReceiving() {
+        const myUID = getMyUID();
+        document.getElementById('myUIDDisplay').innerText = myUID;
+
+        if(!isListening) {
+            isListening = true;
+            const receivedFilesBox = document.getElementById('receivedFilesBox');
+            
+            // Listen to Firebase for incoming files
+            database.ref('shares/' + myUID).on('child_added', (snapshot) => {
+                const data = snapshot.val();
+                
+                // Add fl_attachment to Cloudinary URL to force download
+                const downloadUrl = data.fileUrl.replace('/upload/', '/upload/fl_attachment/');
+
+                const fileHTML = `
+                    <div class="file-item">
+                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">
+                            ${data.fileName}
+                        </span>
+                        <a href="${downloadUrl}" class="download-btn" target="_blank" download>Download</a>
+                    </div>
+                `;
+                receivedFilesBox.innerHTML += fileHTML;
+                
+                // Optional: Remove from database after receiving to clear space
+                // snapshot.ref.remove(); 
+            });
+        }
+    }
+</script>
+
+</body>
+</html>
