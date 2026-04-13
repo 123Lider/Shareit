@@ -58,18 +58,18 @@
     <!-- HOME SCREEN -->
     <div id="homeScreen" class="container screen active-screen">
         <h1 style="margin-bottom: 40px; color: #00bcd4; margin-top: 50px;">Web ShareIt</h1>
-        <button class="btn btn-send" onclick="showScreen('sendScreen')">📤 Send</button>
-        <button class="btn btn-receive" onclick="showScreen('receiveScreen'); startReceiving();">📥 Receive</button>
+        <button class="btn btn-send" onclick="showScreen('sendScreen')">ðŸ“¤ Send</button>
+        <button class="btn btn-receive" onclick="showScreen('receiveScreen'); startReceiving();">ðŸ“¥ Receive</button>
     </div>
 
     <!-- SEND SCREEN -->
     <div id="sendScreen" class="container screen">
-        <button class="btn btn-back" onclick="showScreen('homeScreen')">⬅ Back</button>
+        <button class="btn btn-back" onclick="showScreen('homeScreen')">â¬… Back</button>
         <h2 style="margin-bottom: 10px;">Send Files</h2>
         
         <!-- Input & Send Button on TOP -->
         <input type="text" id="receiverUID" placeholder="Enter Receiver's UID (e.g. 123456)">
-        <button class="btn btn-send" onclick="sendFiles()" style="margin-bottom: 10px;">🚀 Send Now</button>
+        <button class="btn btn-send" onclick="sendFiles()" style="margin-bottom: 10px;">ðŸš€ Send Now</button>
         <div id="status"></div>
         
         <!-- File Picker -->
@@ -83,7 +83,7 @@
 
     <!-- RECEIVE SCREEN -->
     <div id="receiveScreen" class="container screen">
-        <button class="btn btn-back" onclick="showScreen('homeScreen')">⬅ Back</button>
+        <button class="btn btn-back" onclick="showScreen('homeScreen')">â¬… Back</button>
         <h2>Waiting for files...</h2>
         
         <div class="radar-box">
@@ -105,10 +105,10 @@
 
 <script>
     // ==========================================
-    // 1. CONFIGURATION (আপনার আসল API Key বসান)
+    // 1. CONFIGURATION (à¦†à¦ªà¦¨à¦¾à¦° à¦†à¦¸à¦² API Key à¦¬à¦¸à¦¾à¦¨)
     // ==========================================
     
-    // Firebase Config (Firebase Console থেকে পাবেন)
+    // Firebase Config (Firebase Console à¦¥à§‡à¦•à§‡ à¦ªà¦¾à¦¬à§‡à¦¨)
     const firebaseConfig = {
   apiKey: "AIzaSyDrWyO51TZ8xhV5vgCYKxK-nONAkgsW3u8",
   authDomain: "shareit-c6bdf.firebaseapp.com",
@@ -211,7 +211,7 @@
             }
         }
         statusEl.style.color = "#4CAF50";
-        statusEl.innerText = "✅ All files sent successfully!";
+        statusEl.innerText = "âœ… All files sent successfully!";
         setTimeout(() => { statusEl.innerText = ""; statusEl.style.color = "#ffeb3b"; }, 4000);
     }
 
@@ -253,7 +253,7 @@
 
     // Change button text and color after clicking download
     function markDownloaded(btn) {
-        btn.innerText = "Downloaded ✔";
+        btn.innerText = "Downloaded âœ”";
         btn.classList.add("downloaded");
     }
 </script>
